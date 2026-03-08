@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transformer Notes | All About LLM</title>
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        tags: 'ams',
+      },
+      options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'] }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3250;
+      --accent: #6c8ef7;
+      --accent2: #a78bfa;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --code-bg: #12151f;
+      --highlight: #1e2a45;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.85;
+      font-size: 17px;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(15, 17, 23, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+    }
+    .nav-brand {
+      font-family: 'Georgia', serif;
+      font-weight: bold;
+      font-size: 1rem;
+      color: var(--accent);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+    }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-family: system-ui, sans-serif;
+      font-size: 0.85rem;
+      margin-left: 1.5rem;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    /* ── HERO ── */
+    .hero {
+      max-width: 860px;
+      margin: 4rem auto 0;
+      padding: 0 2rem 3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero-tag {
+      display: inline-block;
+      background: var(--highlight);
+      color: var(--accent);
+      font-family: system-ui, sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 1.2rem;
+    }
+    h1.post-title {
+      font-size: clamp(2rem, 5vw, 2.8rem);
+      line-height: 1.2;
+      color: #fff;
+      margin-bottom: 1rem;
+    }
+    .hero-meta {
+      font-family: system-ui, sans-serif;
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+    .hero-meta span { margin-right: 1.5rem; }
+
+    /* ── TOC ── */
+    .toc-card {
+      max-width: 860px;
+      margin: 2.5rem auto;
+      padding: 0 2rem;
+    }
+    .toc-inner {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+    }
+    .toc-inner h2 {
+      font-family: system-ui, sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+    .toc-inner ol {
+      padding-left: 1.2rem;
+      color: var(--muted);
+      font-family: system-ui, sans-serif;
+      font-size: 0.9rem;
+    }
+    .toc-inner ol li { margin: 0.35rem 0; }
+    .toc-inner ol li a {
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .toc-inner ol li a:hover { color: var(--accent); }
+
+    /* ── ARTICLE ── */
+    article {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 2rem 6rem;
+    }
+
+    /* Sections */
+    .section {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+    }
+    .section:first-of-type { border-top: none; }
+
+    h2.section-title {
+      font-size: 1.75rem;
+      color: #fff;
+      margin-bottom: 0.4rem;
+    }
+    h3 {
+      font-size: 1.2rem;
+      color: var(--accent2);
+      margin: 2rem 0 0.75rem;
+    }
+    h4 {
+      font-size: 1rem;
+      color: var(--muted);
+      font-family: system-ui, sans-serif;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 1.5rem 0 0.5rem;
+    }
+    p { margin: 1rem 0; color: var(--text); }
+
+    /* Math display */
+    .math-block {
+      margin: 1.5rem 0;
+      padding: 1.25rem 1.5rem;
+      background: var(--code-bg);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      overflow-x: auto;
+    }
+
+    /* Callout boxes */
+    .callout {
+      margin: 1.5rem 0;
+      padding: 1.25rem 1.5rem;
+      border-radius: 10px;
+      border: 1px solid;
+    }
+    .callout.insight {
+      background: rgba(108, 142, 247, 0.07);
+      border-color: rgba(108, 142, 247, 0.3);
+    }
+    .callout.insight strong { color: var(--accent); }
+    .callout.summary {
+      background: rgba(167, 139, 250, 0.07);
+      border-color: rgba(167, 139, 250, 0.3);
+    }
+    .callout.summary strong { color: var(--accent2); }
+
+    /* Lists */
+    ul, ol {
+      padding-left: 1.6rem;
+      margin: 0.8rem 0;
+    }
+    ul li, ol li { margin: 0.5rem 0; }
+    li::marker { color: var(--accent); }
+
+    /* Figures */
+    figure {
+      margin: 2.5rem 0;
+      text-align: center;
+    }
+    figure img {
+      max-width: 100%;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+    figcaption {
+      margin-top: 0.75rem;
+      font-family: system-ui, sans-serif;
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* Tables */
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: system-ui, sans-serif;
+      font-size: 0.88rem;
+    }
+    th {
+      background: var(--surface2);
+      color: var(--accent);
+      font-weight: 600;
+      padding: 0.6rem 1rem;
+      text-align: left;
+      border-bottom: 2px solid var(--border);
+    }
+    td {
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    tr:hover td { background: var(--surface); }
+    code {
+      font-family: 'Fira Code', 'Menlo', monospace;
+      background: var(--code-bg);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.88em;
+      color: var(--accent);
+    }
+
+    /* Step numbers */
+    .step-grid {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 0.5rem 1rem;
+      margin: 1.2rem 0;
+    }
+    .step-num {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+    .step-body { padding-top: 0.1rem; }
+    .step-body strong { color: var(--accent2); }
+
+    /* Flow diagram */
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0;
+      align-items: center;
+      margin: 1.5rem 0;
+      font-family: system-ui, sans-serif;
+      font-size: 0.85rem;
+    }
+    .flow-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      color: var(--text);
+    }
+    .flow-arrow {
+      color: var(--accent);
+      font-size: 1.2rem;
+      padding: 0 0.5rem;
+    }
+
+    /* Pull quote */
+    blockquote {
+      border-left: 3px solid var(--accent2);
+      margin: 2rem 0;
+      padding: 0.75rem 1.5rem;
+      color: var(--muted);
+      font-style: italic;
+      font-size: 1.05rem;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      text-align: center;
+      font-family: system-ui, sans-serif;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    @media (max-width: 640px) {
+      article, .hero, .toc-card { padding: 0 1.25rem; }
+      h1.post-title { font-size: 1.75rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-brand">All About LLM</a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-tag">Deep Dive</div>
+  <h1 class="post-title">Transformer Notes: Attention, Architecture, and In-Context Learning</h1>
+  <div class="hero-meta">
+    <span>Yue Wu</span>
+    <span>February 2026</span>
+    <span>~25 min read</span>
+  </div>
+</header>
+
+<!-- TOC -->
+<div class="toc-card">
+  <div class="toc-inner">
+    <h2>Table of Contents</h2>
+    <ol>
+      <li><a href="#attention">The Attention Mechanism</a></li>
+      <li><a href="#multihead">Multi-Head Self-Attention</a></li>
+      <li><a href="#next-word">Next Word Prediction &amp; Training</a></li>
+      <li><a href="#ffn">The Feedforward Layer</a></li>
+      <li><a href="#enc-dec">Encoder–Decoder Architecture</a></li>
+      <li><a href="#encoder-details">Encoder Details &amp; Linear Attention Analysis</a></li>
+      <li><a href="#fewshot">In-Context Learning &amp; Few-Shot Meta-Learning</a></li>
+      <li><a href="#kernel">Extending to Nonlinear Functions: The Kernel Perspective</a></li>
+    </ol>
+  </div>
+</div>
+
+<!-- ARTICLE -->
+<article>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 1. ATTENTION MECHANISM -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="section" id="attention">
+    <h2 class="section-title">1. The Attention Mechanism</h2>
+
+    <figure>
+      <img src="untitled folder/ECE590_Lecture9_02.png" alt="Overview of the attention mechanism" />
+      <figcaption>Figure 1 — High-level view of the attention mechanism</figcaption>
+    </figure>
+
+    <p>
+      The Transformer processes a sequence of tokens through a series of well-defined steps. Understanding each step
+      is key to grasping why Transformers are so powerful.
+    </p>
+
+    <h3>Step 1 — Input Sequence</h3>
+    <p>Start with $N$ tokens:</p>
+    <div class="math-block">$$\text{Input} = [w_1, w_2, \ldots, w_N]$$</div>
+
+    <h3>Step 2 — Word Embeddings</h3>
+    <p>Each token is mapped to a dense vector in $\mathbb{R}^d$:</p>
+    <div class="math-block">$$\{c_1, c_2, \ldots, c_N\}, \quad c_i \in \mathbb{R}^d$$</div>
+
+    <h3>Step 3 — Positional Embeddings</h3>
+    <p>
+      Transformers have no inherent notion of word order. Positional encodings fix this by adding
+      position-dependent vectors:
+    </p>
+    <div class="math-block">$$\{p_1, p_2, \ldots, p_N\}, \quad p_i \in \mathbb{R}^d$$</div>
+
+    <h3>Step 4 — Combined Input</h3>
+    <p>Word and positional embeddings are summed element-wise:</p>
+    <div class="math-block">$$\{c_1+p_1,\; c_2+p_2,\; \ldots,\; c_N+p_N\}$$</div>
+
+    <h3>Step 5 — Attention Network</h3>
+    <p>
+      For each position $i$, the attention mechanism gathers a weighted combination of all positions' values:
+    </p>
+    <div class="math-block">
+      $$\tilde{c}_i = \sum_{j=1}^N \text{Attention}(i,j) \cdot (W_V (c_j+p_j))$$
+    </div>
+
+    <h3>Step 6 — Skip Connection (Residual)</h3>
+    <p>
+      The original input is added back — this residual connection ensures gradient flow during training
+      and preserves the original representation:
+    </p>
+    <div class="math-block">$$(c_i+p_i) + \tilde{c}_i$$</div>
+
+    <h3>Step 7 — Add &amp; Normalize</h3>
+    <p>Layer normalization is applied after the residual add:</p>
+    <div class="math-block">
+      $$\text{Output} = \Big\{n(c_1+p_1+\tilde{c}_1),\; n(c_2+p_2+\tilde{c}_2),\; \ldots,\; n(c_N+p_N+\tilde{c}_N)\Big\}$$
+    </div>
+
+    <div class="callout summary">
+      <p>
+        <strong>Summary:</strong> Each token <em>attends</em> to all other tokens in the sequence,
+        producing a context-enriched representation. The skip connection preserves the original identity,
+        while layer norm stabilizes training. The result: contextualized representations ready for the next layer.
+      </p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 2. MULTI-HEAD -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="section" id="multihead">
+    <h2 class="section-title">2. Multi-Head Self-Attention</h2>
+
+    <figure>
+      <img src="untitled folder/ECE590_Lecture9_18.png" alt="Weight matrices in attention" />
+      <figcaption>Figure 2 — Each weight matrix $W_i^Q$ is $d_k(64) \times d_{\text{model}}(512)$</figcaption>
+    </figure>
+
+    <figure>
+      <img src="transformer_multi-headed_self-attention-recap.png" alt="Multi-headed self-attention" style="max-width:80%;" />
+      <figcaption>Figure 3 — Multi-headed self-attention recap</figcaption>
+    </figure>
+
+    <p>
+      Instead of a single attention function, multi-head attention runs $h$ attention operations in parallel,
+      each with its own learned projections:
+    </p>
+    <div class="math-block">
+      $$\text{Multi-Headed Output} = \text{Concat}(\text{output}_1, \ldots, \text{output}_h)\, W^O$$
+      $$\text{output}_i = \text{Attention}(W_i^K K,\; W_i^V V,\; W_i^Q Q)$$
+    </div>
+
+    <p>
+      In <strong>self-attention</strong>, the queries, keys, and values all come from the same input; $K$, $Q$,
+      and $V$ are identical before projection. The $h$ projection matrices allow each head to attend based on
+      different aspects of the word vectors — different topics, writing styles, or syntactic roles.
+    </p>
+
+    <h3>Interaction with Positional Encodings</h3>
+    <p>For word $n$, the combined embedding is $w_n = e_n + p_n$. By linearity:</p>
+    <div class="math-block">
+      $$W_i^Q w_n = W_i^Q e_n + W_i^Q p_n, \quad
+        W_i^K w_n = W_i^K e_n + W_i^K p_n, \quad
+        W_i^V w_n = W_i^V e_n + W_i^V p_n$$
+    </div>
+
+    <p>The sinusoidal positional encoding is defined as:</p>
+    <div class="math-block">
+      $$PE_{(pos,\, 2i)} = \sin\!\left(\frac{pos}{10000^{2i/d}}\right), \qquad
+        PE_{(pos,\, 2i+1)} = \cos\!\left(\frac{pos}{10000^{2i/d}}\right)$$
+    </div>
+
+    <p>Each head can thus learn to exploit positional information in different ways:</p>
+    <ol>
+      <li><strong>Positional frequencies</strong> — components oscillate at different rates with position.</li>
+      <li><strong>Proximity scaling</strong> — head matrices can emphasize components of $p_n$ that correspond to particular scales of closeness.</li>
+      <li><strong>Content emphasis</strong> — head matrices can also emphasize components of $e_n$, highlighting particular topics or writing styles.</li>
+    </ol>
+
+    <h3>Example: Positional-Only Head</h3>
+    <p>
+      One head may learn $W_i^Q e_n \approx \mathbf{0}$ and $W_i^K e_n \approx \mathbf{0}$, so that
+      attention weights are determined almost purely by positional proximity — directing attention to words
+      near the next word to be predicted.
+    </p>
+
+    <h3>Example: Content-Only Values Head</h3>
+    <p>
+      Another head may combine positional keys/queries with content-rich values: $W_i^V p_n \approx \mathbf{0}$
+      while $W_i^V e_n \neq \mathbf{0}$, so the gathered information captures semantic meaning of nearby words.
+    </p>
+
+    <figure>
+      <img src="untitled folder/ECE590_Lecture9_55.png" alt="Encoder block" />
+      <figcaption>Figure 4 — The Encoder block</figcaption>
+    </figure>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 3. NEXT WORD PREDICTION & TRAINING -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="section" id="next-word">
+    <h2 class="section-title">3. Next Word Prediction &amp; Training</h2>
+
+    <h3>Autoregressive Generation</h3>
+    <p>
+      In autoregressive models like GPT, attention is <em>masked</em>: each token attends only to itself and
+      previous tokens — never to future ones. After $L$ layers, the network produces output vectors:
+    </p>
+    <div class="math-block">
+      $$\{f_1^{(L)}, f_2^{(L)}, \ldots, f_N^{(L)}\}$$
+    </div>
+    <p>
+      To predict the $(N+1)$-th token, we use the last position's representation $f_N^{(L)} \in \mathbb{R}^d$,
+      pass it through a learned projection $M \in \mathbb{R}^{d \times d}$, and compute $u = M f_N^{(L)}$.
+    </p>
+    <p>The probability of token $v$ being the next word is then:</p>
+    <div class="math-block">
+      $$p(v \mid \text{prompt}) = \frac{\exp[w_v^T u]}{\displaystyle\sum_{v'=1}^{V} \exp[w_{v'}^T u]}$$
+    </div>
+    <p>
+      where $\{w_v\}_{v=1}^V$ are the learned vocabulary embedding vectors.
+      The last token sees information from all previous tokens through stacks of masked attention layers.
+    </p>
+
+    <h3>Training via Cross-Entropy Loss</h3>
+    <p>
+      Given a corpus of $J$ prompts $\{\text{prompt}^{(j)}\}_{j=1}^J$, each with a true next token
+      $w_{N+1}^{(j)}$, all Transformer parameters $\theta$ are trained by minimizing the cross-entropy loss:
+    </p>
+    <div class="math-block">
+      $$\hat{\theta} = \arg\min_{\theta}\left[-\sum_{j=1}^{J} \log\, p_\theta\!\left(v = w_{N+1}^{(j)} \;\Big|\; \text{prompt}^{(j)}\right)\right]$$
+    </div>
+
+    <div class="callout insight">
+      <p>
+        <strong>Intuition:</strong> The model is rewarded for assigning high probability to the true next
+        token across all prompts. Over millions of examples, this objective forces the model to learn
+        grammar, facts, reasoning patterns, and more.
+      </p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 4. FEEDFORWARD LAYER -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="section" id="ffn">
+    <h2 class="section-title">4. The Feedforward Layer</h2>
+
+    <p>
+      After the attention sub-layer comes the position-wise feedforward network (FFN) — a critical component
+      that adds <em>nonlinearity</em> and processing capacity to each Transformer block.
+    </p>
+
+    <h3>Position in the Block</h3>
+    <div class="flow">
+      <div class="flow-box">Input</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Multi-Head Attention</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Add &amp; Norm</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box" style="border-color:var(--accent);color:var(--accent);">Feedforward</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Add &amp; Norm</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Next Layer</div>
+    </div>
+
+    <h3>Mathematical Formulation</h3>
+    <p>For each token vector $\mathbf{x} \in \mathbb{R}^{d_{\text{model}}}$:</p>
+    <div class="math-block">
+      $$\text{FFN}(\mathbf{x}) = W_2 \cdot \text{Activation}(W_1 \mathbf{x} + b_1) + b_2$$
+    </div>
+    <p>where:</p>
+    <ul>
+      <li>$W_1 \in \mathbb{R}^{d_{\text{ff}} \times d_{\text{model}}}$, $b_1 \in \mathbb{R}^{d_{\text{ff}}}$ — first (expansion) layer</li>
+      <li>$W_2 \in \mathbb{R}^{d_{\text{model}} \times d_{\text{ff}}}$, $b_2 \in \mathbb{R}^{d_{\text{model}}}$ — second (compression) layer</li>
+      <li>Activation: typically ReLU or GELU; $d_{\text{ff}} = 4 \times d_{\text{model}}$</li>
+    </ul>
+
+    <h3>Activation Functions</h3>
+    <div class="math-block">
+      $$\text{ReLU}(x) = \max(0, x)$$
+      $$\text{GELU}(x) = x \cdot \Phi(x) \quad \text{where } \Phi(x) \text{ is the standard Gaussian CDF}$$
+    </div>
+
+    <h3>The 4× Expansion</h3>
+    <p>A typical configuration ($d_{\text{model}} = 512$, $d_{\text{ff}} = 2048$):</p>
+    <div class="flow">
+      <div class="flow-box">512</div>
+      <div class="flow-arrow">—$W_1$→</div>
+      <div class="flow-box">2048</div>
+      <div class="flow-arrow">—Activation→</div>
+      <div class="flow-box">2048</div>
+      <div class="flow-arrow">—$W_2$→</div>
+      <div class="flow-box">512</div>
+    </div>
+
+    <h3>Key Properties</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Property</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Position-wise</td><td>Applied independently to each token — no cross-token communication</td></tr>
+          <tr><td>Two-layer</td><td>Expands dimension then compresses back</td></tr>
+          <tr><td>Nonlinear</td><td>Activation introduces essential nonlinearity</td></tr>
+          <tr><td>Identical weights</td><td>Same $W_1$, $W_2$ for all positions within a layer</td></tr>
+          <tr><td>Layer-specific</td><td>Each Transformer layer has its own FFN weights</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Attention vs. Feedforward</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Aspect</th><th>Attention</th><th>Feedforward</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Communication</td><td>Across all positions</td><td>Within a single position</td></tr>
+          <tr><td>Operation</td><td>Weighted sum of values</td><td>Dense neural network</td></tr>
+          <tr><td>Parameters</td><td>Q, K, V matrices</td><td>Two weight matrices</td></tr>
+          <tr><td>Role</td><td>Information gathering</td><td>Information processing</td></tr>
+          <tr><td>Linearity</td><td>Linear (weighted sum)</td><td>Nonlinear (activation)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <blockquote>
+      The feedforward layer is where each token individually processes and refines the information gathered by
+      attention, adding essential nonlinearity and accessing stored knowledge.
+    </blockquote>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 5. ENCODER-DECODER -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="section" id="enc-dec">
+    <h2 class="section-title">5. Encoder–Decoder Architecture</h2>
+
+    <figure>
+      <img src="transformer_resideual_layer_norm_3.png" alt="Encoder-decoder architecture" />
+      <figcaption>Figure 5 — The Encoder–Decoder Transformer</figcaption>
+    </figure>
+
+    <p>The full Transformer consists of two main components:</p>
+    <ul>
+      <li><strong>Encoder</strong> — Builds a contextual understanding of the input sequence.</li>
+      <li><strong>Decoder</strong> — Generates the output sequence using the encoder's representation plus previously generated tokens.</li>
+    </ul>
+
+    <h3>Encoder</h3>
+    <p>
+      Given an input sequence $X \in \mathbb{R}^{T \times d}$, each encoder layer applies:
+    </p>
+    <ol>
+      <li>
+        <strong>Self-Attention</strong> — Every token attends to all others:
+        <div class="math-block">
+          $$\text{Attention}(Q,K,V) = \text{softmax}\!\left(\frac{QK^T}{\sqrt{d_k}}\right)V$$
+          $$Q = XW_Q,\quad K = XW_K,\quad V = XW_V, \quad W_Q, W_K, W_V \in \mathbb{R}^{d_{\text{model}} \times d_k}$$
+        </div>
+        Compactly: $\text{SelfAttention}(X) = \text{softmax}\!\left(\dfrac{(XW_Q)(XW_K)^T}{\sqrt{d_k}}\right)(XW_V)$
+      </li>
+      <li><strong>Feedforward Network</strong> — Position-wise nonlinear transformation.</li>
+    </ol>
+    <p>After several layers the encoder produces a <strong>memory</strong> of the input:</p>
+    <div class="math-block">$$E = \text{Encoder}(X), \quad E \in \mathbb{R}^{T \times d}$$</div>
+
+    <h3>Decoder</h3>
+    <p>The decoder generates tokens autoregressively. Each decoder layer has:</p>
+    <ol>
+      <li><strong>Masked Self-Attention</strong> — Each position attends only to past tokens.</li>
+      <li>
+        <strong>Cross-Attention</strong> — The key interaction between encoder and decoder:
+        <div class="math-block">$$Q = \text{decoder states},\quad K, V = E$$</div>
+        The decoder queries the encoder memory to retrieve relevant source information.
+      </li>
+      <li><strong>Feedforward Network</strong> — Further transforms the combined information.</li>
+    </ol>
+
+    <h3>Information Flow</h3>
+    <div class="flow" style="flex-direction:column; align-items:flex-start; gap:0.5rem;">
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <div class="flow-box">Input Tokens</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">Encoder</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box" style="border-color:var(--accent);color:var(--accent);">$E$ (memory)</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <div class="flow-box">Previous Outputs</div>
+        <div class="flow-arrow">+</div>
+        <div class="flow-box" style="border-color:var(--accent);color:var(--accent);">$E$</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">Decoder</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">Next Token</div>
+      </div>
+    </div>
+
+    <div class="callout insight">
+      <p>
+        <strong>Key Insight:</strong> Cross-attention eliminates the information bottleneck present in older
+        RNN-based sequence-to-sequence models, where the entire source had to be compressed into a single
+        fixed-size vector. The decoder can directly attend to any part of the source at every layer.
+      </p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 6. ENCODER DETAILS -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="section" id="encoder-details">
+    <h2 class="section-title">6. Encoder Details &amp; Linear Attention Analysis</h2>
+
+    <p>
+      To build mathematical intuition, consider a simplified single-head encoder with shared parameters
+      $W_Q, W_K, W_V, P \in \mathbb{R}^{d \times d}$ across all layers.
+    </p>
+
+    <h3>The Update Rule</h3>
+    <p>The output at position $i$ from layer $l$, with skip connection:</p>
+    <div class="math-block">
+      $$e_i^{(l)} = e_i^{(l-1)} + P \sum_{j=1}^{N} \bigl(W_V e_j^{(l-1)}\bigr)\, w_{ij}^{(l-1)}$$
+    </div>
+    <p>where the attention weight is a softmax over query-key similarities:</p>
+    <div class="math-block">
+      $$w_{ij}^{(l-1)} = \frac{\exp\!\left[\lambda\, (W_Q e_i^{(l-1)})^T (W_K e_j^{(l-1)})\right]}
+        {\displaystyle\sum_{j'=1}^{N} \exp\!\left[\lambda\, (W_Q e_i^{(l-1)})^T (W_K e_{j'}^{(l-1)})\right]}$$
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Symbol</th><th>Meaning</th><th>Intuition</th></tr></thead>
+        <tbody>
+          <tr><td>$e_i^{(0)}$</td><td>Input at position $i$</td><td>Initial word representation (e.g., "bank" — river or money?)</td></tr>
+          <tr><td>$e_i^{(1)}$</td><td>Output at position $i$</td><td>Contextualized representation after seeing the whole sentence</td></tr>
+          <tr><td>$P$</td><td>Projection matrix</td><td>"How much should I revise my understanding based on context?"</td></tr>
+          <tr><td>$W_V e_j^{(0)}$</td><td>Value of position $j$</td><td>Semantic content of word $j$</td></tr>
+          <tr><td>$w_{ij}^{(0)}$</td><td>Attention weight</td><td>How relevant is word $j$ to understanding word $i$?</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Linear Attention Simplification</h3>
+    <p>
+      Setting $\Phi = W_Q^T W_K = I$ (identity) gives the <em>linear attention</em> update — a simplification
+      that captures the core structure of attention:
+    </p>
+    <div class="math-block">
+      $$e_i^{(l)} = e_i^{(l-1)} + P \sum_{j=1}^{N} (W_V e_j^{(l-1)})\, \underbrace{\bigl[(e_i^{(l-1)})^T e_j^{(l-1)}\bigr]}_{\text{linear attention}}$$
+    </div>
+    <p>In matrix form, with $E_l = (e_1^{(l)}, \ldots, e_N^{(l)}) \in \mathbb{R}^{d \times N}$:</p>
+    <div class="math-block">
+      $$E_l = E_{l-1} + P \underbrace{W_V E_{l-1}}_{\text{Values}} \underbrace{[E_{l-1}^T E_{l-1}]}_{\text{Attention weights}}$$
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 7. IN-CONTEXT LEARNING -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="section" id="fewshot">
+    <h2 class="section-title">7. In-Context Learning &amp; Few-Shot Meta-Learning</h2>
+
+    <p>
+      The linear attention framework above reveals a surprising and beautiful connection between
+      Transformer forward passes and gradient descent — explaining how LLMs can learn from a handful of
+      examples in their context window.
+    </p>
+
+    <h3>The Setup</h3>
+    <p>Consider contextual data $C = \{(x_i, y_i)\}_{i=1}^N$ where $x_i \in \mathbb{R}^d$, $y_i \in \mathbb{R}$,
+    and an unknown function $y_i = f(x_i)$. Given $C$, predict $y_{N+1} = f(x_{N+1})$ for a new query.
+    This is <strong>few-shot learning</strong> (also called <em>meta-learning</em>):
+    <em>Learning to learn</em> — a model trained on $M$ such tasks should adapt to a new task at inference time,
+    without changing any parameters.
+    </p>
+
+    <h3>Hypothesis: Attention Implements Gradient Descent</h3>
+    <p>
+      For the linear model $f_\theta(x) = w^T x$ and the squared loss:
+    </p>
+    <div class="math-block">
+      $$\mathcal{L}(w) = \frac{1}{2}\sum_{i=1}^N (y_i - w^T x_i)^2$$
+    </div>
+    <p>Gradient descent produces the update:</p>
+    <div class="math-block">
+      $$w_{k+1} = w_k + \alpha \sum_{i=1}^N (y_i - w_k^T x_i)\, x_i$$
+    </div>
+    <p>In function space, this is:</p>
+    <div class="math-block">
+      $$f_{\theta_{k+1}}(x_j) = f_{\theta_k}(x_j) + \alpha \sum_{i=1}^N \bigl[y_i - f_{\theta_k}(x_i)\bigr]\, x_i^T x_j$$
+    </div>
+
+    <h3>Encoding the Context</h3>
+    <p>Encode each context point as a $(d+1)$-dimensional vector:</p>
+    <div class="math-block">
+      $$e_{1,0} = \begin{pmatrix} x_1 \\ y_1 \end{pmatrix}, \quad
+        e_{2,0} = \begin{pmatrix} x_2 \\ y_2 \end{pmatrix}, \quad \ldots, \quad
+        e_{N+1,0} = \begin{pmatrix} x_{N+1} \\ 0 \end{pmatrix}$$
+    </div>
+    <p>Design the parameter matrices as:</p>
+    <div class="math-block">
+      $$\Phi = \begin{pmatrix} I_{d} & 0 \\ 0 & 0 \end{pmatrix}, \quad
+        W_V = \begin{pmatrix} 0_{d\times d} & 0 \\ 0 & 1 \end{pmatrix}, \quad
+        P = \begin{pmatrix} 0_{d\times d} & 0 \\ 0 & -\alpha \end{pmatrix}$$
+    </div>
+
+    <h3>What Happens at Each Layer</h3>
+    <p>After layer $k$, position $j$ holds:</p>
+    <div class="math-block">
+      $$e_{j,k} = \begin{pmatrix} x_j \\[4pt] y_j - \displaystyle\sum_{k'=1}^k \Delta f_{\theta_{k'}}(x_j) \end{pmatrix}$$
+    </div>
+    <p>
+      The bottom component tracks the <em>residual error</em> of the model at step $k$.
+      The linear attention output at layer $k+1$ contributes exactly:
+    </p>
+    <div class="math-block">
+      $$\begin{pmatrix} 0 \\ -\Delta f_{\theta_{k+1}}(x_j) \end{pmatrix}$$
+    </div>
+    <p>Via the skip connection, this updates $e_{j,k}$ to $e_{j,k+1}$ — incrementally tracking the cumulative gradient descent update.</p>
+
+    <div class="callout insight">
+      <p>
+        <strong>The Punchline:</strong> A Transformer with linear attention, with properly designed parameters,
+        performs <em>gradient descent in its forward pass</em>. Each layer $=$ one GD step. The skip
+        connections accumulate the updates. No parameter changes required at inference time — just the
+        forward pass itself is learning from context.
+      </p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 8. KERNEL PERSPECTIVE -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="section" id="kernel">
+    <h2 class="section-title">8. Extending to Nonlinear Functions: The Kernel Perspective</h2>
+
+    <p>
+      The linear model analysis extends naturally to <strong>nonlinear functions</strong> via kernel methods —
+      bridging kernel machines and Transformer attention.
+    </p>
+
+    <h3>Feature Mapping &amp; Kernel Trick</h3>
+    <p>Map inputs to a (possibly infinite-dimensional) feature space $\phi(x) \in \mathbb{R}^{d'}$:</p>
+    <div class="math-block">
+      $$f_\theta(x) = w^T \phi(x) + b$$
+    </div>
+    <p>The <strong>kernel trick</strong> avoids computing $\phi(x)$ explicitly; work with inner products instead:</p>
+    <div class="math-block">$$\kappa(x_i, x_j) = \phi(x_i)^T \phi(x_j)$$</div>
+
+    <h3>Common Kernel Functions</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Kernel</th><th>Formula</th></tr></thead>
+        <tbody>
+          <tr><td>Linear</td><td>$\kappa(x_i, x_j) = x_i^T x_j$</td></tr>
+          <tr><td>RBF (Gaussian)</td><td>$\kappa(x_i, x_j) = \exp\!\left(-\|x_i - x_j\|_2^2 / \sigma^2\right)$</td></tr>
+          <tr><td>Laplacian</td><td>$\kappa(x_i, x_j) = \exp\!\left(-\|x_i - x_j\|_1 / \sigma^2\right)$</td></tr>
+          <tr><td>Polynomial</td><td>$\kappa(x_i, x_j) = (\gamma x_i^T x_j + c)^d$</td></tr>
+          <tr><td>Cosine</td><td>$\kappa(x_i, x_j) = x_i^T x_j / (\|x_i\|_2 \|x_j\|_2)$</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Kernel Gradient Descent</h3>
+    <p>GD in feature space produces the function-space update:</p>
+    <div class="math-block">
+      $$f_{w_{k+1}}(x_j) = f_{w_k}(x_j) + \alpha \sum_{i=1}^N \bigl[y_i - f_{w_k}(x_i)\bigr]\, \kappa(x_i, x_j)$$
+    </div>
+    <p>
+      This matches the linear attention update — with $\kappa(x_i, x_j)$ playing the role of the
+      attention score. The entire kernel GD algorithm can be implemented as a Transformer forward pass!
+    </p>
+
+    <h3>Two-Head Attention for Bias Terms</h3>
+    <p>When a bias $b$ is included in $f_\theta$, gradient descent produces two update terms (kernel + constant).
+    These can be implemented with <strong>two attention heads</strong>:</p>
+    <ul>
+      <li>
+        <strong>Head 1 (Kernel head)</strong> — Computes RBF kernel similarity between positions.
+        <div class="math-block">
+          $$W_Q^{(1)} = W_K^{(1)} = \begin{pmatrix} I_d & 0 \\ 0 & 0 \end{pmatrix}, \quad
+          \kappa(W_K^{(1)} e_i,\, W_Q^{(1)} e_j) = \exp\!\left(-\frac{\|x_i - x_j\|_2^2}{\sigma^2}\right)$$
+        </div>
+      </li>
+      <li>
+        <strong>Head 2 (Bias head)</strong> — Provides constant attention weight of 1 for the bias term.
+        <div class="math-block">
+          $$W_Q^{(2)} = W_K^{(2)} = 0_{(d+1)\times(d+1)}, \quad \kappa(\cdot,\cdot) = 1$$
+        </div>
+      </li>
+    </ul>
+    <p>Both heads share the same value and output matrices:</p>
+    <div class="math-block">
+      $$W_V^{(1)} = W_V^{(2)} = \begin{pmatrix} 0_{d\times d} & 0 \\ 0 & 1 \end{pmatrix}, \quad
+        W_O^{(1)} = W_O^{(2)} = \begin{pmatrix} 0_{d\times d} & 0 \\ 0 & -\alpha \end{pmatrix}$$
+    </div>
+
+    <h3>Formal Equivalence: Linear Attention = Gradient Descent</h3>
+    <p>
+      With the encoding and matrix design from Section 6, we can verify step by step that
+      the Transformer's forward pass over $L$ layers computes exactly $L$ steps of gradient descent:
+    </p>
+    <div class="math-block">
+      $$f_{\theta_L}(x_{N+1}) = \sum_{k=1}^L \alpha \sum_{i=1}^N \bigl(y_i - f_{\theta_{k-1}}(x_i)\bigr)\, x_i^T x_{N+1}$$
+    </div>
+    <p>
+      After $L$ layers, the query position $N+1$ carries:
+    </p>
+    <div class="math-block">
+      $$e_{N+1,L} = \begin{pmatrix} x_{N+1} \\ -\displaystyle\sum_{k'=1}^L \Delta f_{\theta_{k'}}(x_{N+1}) \end{pmatrix}$$
+    </div>
+    <p>Taking the inner product with $(0_d, -1)^T$ extracts the final prediction $f_{\theta_L}(x_{N+1})$.</p>
+
+    <div class="callout summary">
+      <p><strong>Key Insights from the Kernel Perspective:</strong></p>
+      <ul>
+        <li>Nonlinear attention arises naturally from different choices of kernel $\kappa$.</li>
+        <li>Multi-head attention can implement different components of the GD update (e.g., kernel term + bias term).</li>
+        <li>The skip connection is essential — it accumulates gradient descent updates across layers.</li>
+        <li>This framework provides a principled explanation of <em>in-context learning</em>: the Transformer literally performs GD on the prompt examples during its forward pass.</li>
+        <li>Softmax attention approximates a valid Mercer kernel, grounding the intuition in RKHS theory.</li>
+      </ul>
+    </div>
+
+    <blockquote>
+      Transformers with kernel-based attention can perform gradient descent for nonlinear functions entirely
+      within their forward pass — explaining their powerful few-shot learning capabilities without any
+      parameter updates at inference time.
+    </blockquote>
+  </div>
+
+</article>
+
+<footer>
+  <p>All About LLM &mdash; Notes by Yue Wu &mdash; February 2026</p>
+  <p style="margin-top:0.5rem;">
+    <a href="index.html" style="color:var(--accent);text-decoration:none;">← Back to Home</a>
+  </p>
+</footer>
+
+</body>
+</html>
